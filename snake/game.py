@@ -110,11 +110,11 @@ class SnakeGameAI:
             self.snake.pop()
         
         
-        if self.score % 15 == 0:
-            reward += 5
+        # if self.score % 15 == 0:
+        #     reward += 5
             
-        # Penalty for inefficiency
-        reward -= 0.01 * self.steps_since_last_food
+        # # Penalty for inefficiency
+        # reward -= 0.01 * self.steps_since_last_food
         
         # 5. update ui and clock
         self._update_ui()

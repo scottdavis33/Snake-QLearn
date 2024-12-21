@@ -121,9 +121,12 @@ def train(max_games = None):
     plot_scores = []
     plot_mean_scores = []
     plot_records = []
+    plot_average_losses = []
     plot_losses = []
     total_score = 0
-    mean_loss = 0
+    average_loss = 0
+    
+    
     record = 0
     agent = Agent()
     game = SnakeGameAI()
@@ -171,6 +174,8 @@ def train(max_games = None):
                 plot_records.append(record)
                 plot_scores.append(score)
                 plot_mean_scores.append(mean_score)
+                plot_average_losses.append(average_loss)
+                plot_losses.append(loss)
                 
                 if max_games and agent.n_games >= max_games:
                     break  # Break after reaching the max number of games
@@ -179,7 +184,7 @@ def train(max_games = None):
         print('Training interrupted by user.')
     finally:
         print('Training completed.')
-        return plot_scores, plot_mean_scores, plot_records
+        return plot_scores, plot_mean_scores, plot_records, plot_average_losses, plot_losses 
             
                     
 if __name__ == '__main__':
