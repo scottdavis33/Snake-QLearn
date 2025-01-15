@@ -16,18 +16,21 @@ class Agent:
     def __init__(self):
         self.n_games = 0
         
+        
         self.epsilon = 1.0  # Starting value of epsilon
         self.epsilon_min = 0  # Minimum value of epsilon
         self.epsilon_decay = 0.999  # Decay rate per game
         
         self.gamma = 0.9 # discount rate 
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_Qnet(12, 256, 3) 
+        self.model = Linear_Qnet(16, 256, 3) 
         self.trainer = QTrainer(self.model, lr=LR, gamma = self.gamma)
 
     
     def get_state(self, game):
         head = game.snake[0]
+        tail = game.snake[-1]
+        
         point_l = Point(head.x - 20, head.y)
         point_r = Point(head.x + 20, head.y)
         point_u = Point(head.x, head.y - 20)
@@ -71,8 +74,14 @@ class Agent:
             
             
             # Length of Snake
-            len(game.snake)  # Adding snake length to the state
+            len(game.snake),  # Adding snake length to the state
             
+            
+            # Tail direction relative to head
+            tail.x < head.x,  # Tail left
+            tail.x > head.x,  # Tail right
+            tail.y < head.y,  # Tail up
+            tail.y > head.y   # Tail down
             ]
         
         
@@ -116,7 +125,7 @@ class Agent:
         
         return final_move
                 
-def train(max_games = None):
+def train(r_food = 10, r_col = -10, r_sslf = .001, max_games = None):
     
     plot_scores = []
     plot_mean_scores = []
@@ -125,6 +134,7 @@ def train(max_games = None):
     plot_losses = []
     total_score = 0
     average_loss = 0
+    min_avg_loss = 100
     
     
     record = 0
@@ -140,7 +150,7 @@ def train(max_games = None):
             
             # perform move and get new state
             
-            reward, done, score = game.play_step(final_move)
+            reward, done, score = game.play_step(final_move, r_food, r_col, r_sslf)
             
             state_new = agent.get_state(game)
             
@@ -156,9 +166,6 @@ def train(max_games = None):
                 game.reset()
                 agent.n_games += 1
                 loss = agent.train_long_memory()
-                # agent.train_long_memory()
-                
-                plot_losses.append(loss)
                 average_loss = np.mean(plot_losses)
                 
                 if score > record:
@@ -168,14 +175,18 @@ def train(max_games = None):
                 total_score += score
                 mean_score = total_score / agent.n_games
                 
+                if agent.n_games > 20 and average_loss < min_avg_loss:
+                    min_avg_loss = average_loss
+                
                 print('Game:', agent.n_games, 'Score:', score, 'Record:', record, 'Average Score:', np.round(mean_score, 4), 'Average Loss:', np.round(average_loss,4), 'Epsilon', agent.epsilon)
 
 
+                plot_losses.append(loss)
                 plot_records.append(record)
                 plot_scores.append(score)
                 plot_mean_scores.append(mean_score)
                 plot_average_losses.append(average_loss)
-                plot_losses.append(loss)
+
                 
                 if max_games and agent.n_games >= max_games:
                     break  # Break after reaching the max number of games
@@ -184,7 +195,7 @@ def train(max_games = None):
         print('Training interrupted by user.')
     finally:
         print('Training completed.')
-        return plot_scores, plot_mean_scores, plot_records, plot_average_losses, plot_losses 
+        return plot_scores, plot_mean_scores, plot_records, plot_average_losses, plot_losses, min_avg_loss
             
                     
 if __name__ == '__main__':

@@ -73,7 +73,7 @@ class SnakeGameAI:
         if self.food in self.snake:
             self._place_food()
         
-    def play_step(self, action):
+    def play_step(self, action, r_food, r_col, r_sslf):
         self.frame_iteration += 1
         self.steps_since_last_food += 1  # Reset steps counter when game is reset
         
@@ -95,7 +95,7 @@ class SnakeGameAI:
         reward = 0
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
-            reward = -10
+            reward = r_col
             game_over = True
             return reward, game_over, self.score
             
@@ -103,7 +103,7 @@ class SnakeGameAI:
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 10
+            reward = r_food
             self._place_food()
             self.steps_since_last_food = 0
         else:
@@ -113,8 +113,8 @@ class SnakeGameAI:
         # if self.score % 15 == 0:
         #     reward += 5
             
-        # # Penalty for inefficiency
-        # reward -= 0.01 * self.steps_since_last_food
+        # Penalty for inefficiency
+        reward -= r_sslf * self.steps_since_last_food
         
         # 5. update ui and clock
         self._update_ui()
